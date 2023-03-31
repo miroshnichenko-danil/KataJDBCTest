@@ -27,7 +27,7 @@ public class UserDaoJDBCImpl implements UserDao {
         try (Connection connection = Util.getConnection()) {
             connection.createStatement().executeUpdate(sqlReq);
         } catch (SQLException e) {
-            throw new RuntimeException("Проблема при создании таблицы");
+            System.out.println("Проблема при создании таблицы");
         }
     }
 
@@ -36,7 +36,7 @@ public class UserDaoJDBCImpl implements UserDao {
         try (Connection connection = Util.getConnection()) {
             connection.createStatement().executeUpdate(sqlReq);
         } catch (SQLException e) {
-            throw new RuntimeException("Проблема при Удалении таблицы");
+            System.out.println("Проблема при Удалении таблицы");
         }
     }
 
@@ -45,13 +45,15 @@ public class UserDaoJDBCImpl implements UserDao {
         try (Connection connection = Util.getConnection();
              PreparedStatement prep = connection.prepareStatement(sqlReq)) {
 
+            connection.setAutoCommit(false);
             prep.setString(1, name);
             prep.setString(2, lastName);
             prep.setByte(3, age);
             prep.executeUpdate();
             System.out.println(new User(name, lastName, age).toString());
+            connection.commit();
         } catch (SQLException e) {
-            throw new RuntimeException("Ошибка сохранения Юзера");
+            System.out.println("Ошибка сохранения Юзера");
         }
     }
 
@@ -62,7 +64,7 @@ public class UserDaoJDBCImpl implements UserDao {
             prep.setLong(1, id);
             prep.executeUpdate();
         } catch (SQLException e) {
-            throw new RuntimeException("Проблема удаления Юзера");
+            System.out.println("Проблема удаления Юзера");
         }
 
     }
@@ -76,7 +78,7 @@ public class UserDaoJDBCImpl implements UserDao {
                         resultSet.getByte(4)));
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.out.println("Ошибка получения списка пользователей");
         }
         return result;
     }
@@ -86,7 +88,7 @@ public class UserDaoJDBCImpl implements UserDao {
         try (Connection connection = Util.getConnection()) {
             connection.createStatement().executeUpdate(sqlReq);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            System.out.println("Ошибка при очистке таблицы");
         }
     }
 }
