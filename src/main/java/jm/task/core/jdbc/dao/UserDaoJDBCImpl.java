@@ -25,7 +25,13 @@ public class UserDaoJDBCImpl implements UserDao {
                 age TINYINT
                 )""";
         try (Connection connection = Util.getConnection()) {
-            connection.createStatement().executeUpdate(sqlReq);
+            connection.setAutoCommit(false);
+            try {
+                connection.createStatement().executeUpdate(sqlReq);
+                connection.commit();
+            } catch (SQLException ex) {
+                connection.rollback();
+            }
         } catch (SQLException e) {
             System.out.println("Проблема при создании таблицы");
         }
@@ -34,7 +40,13 @@ public class UserDaoJDBCImpl implements UserDao {
     public void dropUsersTable() {
         String sqlReq = "DROP TABLE IF EXISTS users_table";
         try (Connection connection = Util.getConnection()) {
-            connection.createStatement().executeUpdate(sqlReq);
+            connection.setAutoCommit(false);
+            try {
+                connection.createStatement().executeUpdate(sqlReq);
+                connection.commit();
+            } catch (SQLException ex) {
+                connection.rollback();
+            }
         } catch (SQLException e) {
             System.out.println("Проблема при Удалении таблицы");
         }
@@ -46,12 +58,16 @@ public class UserDaoJDBCImpl implements UserDao {
              PreparedStatement prep = connection.prepareStatement(sqlReq)) {
 
             connection.setAutoCommit(false);
-            prep.setString(1, name);
-            prep.setString(2, lastName);
-            prep.setByte(3, age);
-            prep.executeUpdate();
-            System.out.println(new User(name, lastName, age).toString());
-            connection.commit();
+            try {
+                prep.setString(1, name);
+                prep.setString(2, lastName);
+                prep.setByte(3, age);
+                prep.executeUpdate();
+                connection.commit();
+                System.out.println(new User(name, lastName, age).toString());
+            } catch (SQLException ex) {
+                connection.rollback();
+            }
         } catch (SQLException e) {
             System.out.println("Ошибка сохранения Юзера");
         }
@@ -61,8 +77,14 @@ public class UserDaoJDBCImpl implements UserDao {
         String sqlReq = "DELETE FROM users_table WHERE id = ?";
         try (Connection connection = Util.getConnection();
              PreparedStatement prep = connection.prepareStatement(sqlReq)) {
-            prep.setLong(1, id);
-            prep.executeUpdate();
+            connection.setAutoCommit(false);
+            try {
+                prep.setLong(1, id);
+                prep.executeUpdate();
+                connection.commit();
+            } catch (SQLException ex) {
+                connection.rollback();
+            }
         } catch (SQLException e) {
             System.out.println("Проблема удаления Юзера");
         }
@@ -72,10 +94,16 @@ public class UserDaoJDBCImpl implements UserDao {
     public List<User> getAllUsers() {
         List<User> result = new ArrayList<>();
         try (Connection connection = Util.getConnection()) {
-            ResultSet resultSet = connection.createStatement().executeQuery("SELECT * FROM users_table");
-            while (resultSet.next()) {
-                result.add(new User(resultSet.getString(2), resultSet.getString(3),
-                        resultSet.getByte(4)));
+            connection.setAutoCommit(false);
+            try {
+                ResultSet resultSet = connection.createStatement().executeQuery("SELECT * FROM users_table");
+                connection.commit();
+                while (resultSet.next()) {
+                    result.add(new User(resultSet.getString(2), resultSet.getString(3),
+                            resultSet.getByte(4)));
+                }
+            } catch (SQLException ex) {
+                connection.rollback();
             }
         } catch (SQLException e) {
             System.out.println("Ошибка получения списка пользователей");
@@ -86,7 +114,12 @@ public class UserDaoJDBCImpl implements UserDao {
     public void cleanUsersTable() {
         String sqlReq = "TRUNCATE users_table";
         try (Connection connection = Util.getConnection()) {
-            connection.createStatement().executeUpdate(sqlReq);
+            connection.setAutoCommit(false);
+            try {
+                connection.createStatement().executeUpdate(sqlReq);
+            } catch (SQLException ex) {
+                connection.rollback();
+            }
         } catch (SQLException e) {
             System.out.println("Ошибка при очистке таблицы");
         }
